@@ -408,13 +408,13 @@ class TaskManager {
         
         if (body.classList.contains('dark-theme')) {
             body.classList.remove('dark-theme');
-            btnIcon.textContent = '🌙';
+            btnIcon.textContent = '�';
             themeToggle.title = 'Cambiar a tema oscuro';
             localStorage.setItem('theme', 'light');
             this.showNotification('Tema claro activado', 'info');
         } else {
             body.classList.add('dark-theme');
-            btnIcon.textContent = '☀️';
+            btnIcon.textContent = '🌑';
             themeToggle.title = 'Cambiar a tema claro';
             localStorage.setItem('theme', 'dark');
             this.showNotification('Tema oscuro activado', 'info');
@@ -429,10 +429,10 @@ class TaskManager {
         
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-theme');
-            btnIcon.textContent = '☀️';
+            btnIcon.textContent = '🌑';
             themeToggle.title = 'Cambiar a tema claro';
         } else {
-            btnIcon.textContent = '🌙';
+            btnIcon.textContent = '�';
             themeToggle.title = 'Cambiar a tema oscuro';
         }
     }
