@@ -4,6 +4,7 @@ class TaskManager {
         this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         this.editingId = null;
         this.deleteId = null;
+        this.filteredTasks = null;
         this.init();
     }
 
@@ -61,6 +62,10 @@ class TaskManager {
             }
         });
     }
+        // Buscador
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            this.handleSearch(e.target.value);
+        });
 
     // Manejar envío del formulario
     handleSubmit() {
@@ -195,14 +200,16 @@ class TaskManager {
     // Renderizar tareas
     renderTasks() {
         const tasksList = document.getElementById('tasksList');
-        
-        if (this.tasks.length === 0) {
-            tasksList.innerHTML = '<div class="empty-message">No hay tareas. ¡Agrega una nueva tarea para comenzar!</div>';
+        const tasksToShow = this.filteredTasks !== null ? this.filteredTasks : this.tasks;
+
+        if (tasksToShow.length === 0) {
+            tasksList.innerHTML = '<div class="empty-message">No hay tareas que coincidan con la búsqueda.</div>';
+            this.updateTaskCount(tasksToShow);
             return;
         }
 
-        tasksList.innerHTML = this.tasks.map(task => this.createTaskHTML(task)).join('');
-        this.updateTaskCount();
+        tasksList.innerHTML = tasksToShow.map(task => this.createTaskHTML(task)).join('');
+        this.updateTaskCount(tasksToShow);
     }
 
     // Crear HTML de una tarea
@@ -245,24 +252,23 @@ class TaskManager {
 
     // Actualizar contador de tareas y estadísticas del header
     updateTaskCount() {
-        const count = this.tasks.length;
-        const completedCount = this.tasks.filter(task => task.completed).length;
+        // Permitir actualizar el contador según el array filtrado
+        const tasksArr = arguments.length ? arguments[0] : this.tasks;
+        const count = tasksArr.length;
+        const completedCount = tasksArr.filter(task => task.completed).length;
         const pendingCount = count - completedCount;
-        
-        // Actualizar contador en la sección de tareas
+
         let countText = `${count} tarea${count !== 1 ? 's' : ''}`;
         if (count > 0) {
             countText += ` (${completedCount} completada${completedCount !== 1 ? 's' : ''}, ${pendingCount} pendiente${pendingCount !== 1 ? 's' : ''})`;
         }
         document.getElementById('taskCount').textContent = countText;
-        
-        // Actualizar estadísticas del header
-        document.getElementById('totalTasks').textContent = count;
-        document.getElementById('completedTasks').textContent = completedCount;
-        document.getElementById('pendingTasks').textContent = pendingCount;
-        
-        // Actualizar barra de progreso
-        const progressPercentage = count > 0 ? Math.round((completedCount / count) * 100) : 0;
+
+        document.getElementById('totalTasks').textContent = this.tasks.length;
+        document.getElementById('completedTasks').textContent = this.tasks.filter(task => task.completed).length;
+        document.getElementById('pendingTasks').textContent = this.tasks.filter(task => !task.completed).length;
+
+        const progressPercentage = this.tasks.length > 0 ? Math.round((this.tasks.filter(task => task.completed).length / this.tasks.length) * 100) : 0;
         document.getElementById('progressFill').style.width = `${progressPercentage}%`;
         document.getElementById('progressText').textContent = `${progressPercentage}% completado`;
     }
@@ -270,6 +276,20 @@ class TaskManager {
     // Guardar tareas en localStorage
     saveTasks() {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        this.handleSearch(document.getElementById('searchInput').value);
+    }
+    // Buscar tareas
+    handleSearch(query) {
+        const value = query.trim().toLowerCase();
+        if (value === '') {
+            this.filteredTasks = null;
+        } else {
+            this.filteredTasks = this.tasks.filter(task =>
+                task.title.toLowerCase().includes(value) ||
+                (task.description && task.description.toLowerCase().includes(value))
+            );
+        }
+        this.renderTasks();
     }
 
     // Mostrar modal de confirmación
@@ -441,6 +461,10 @@ class TaskManager {
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     window.taskManager = new TaskManager();
+    // Buscador
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        window.taskManager.handleSearch(e.target.value);
+    });
 });
 
 // Función para exportar tareas (opcional)
