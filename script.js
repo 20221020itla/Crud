@@ -61,19 +61,23 @@ class TaskManager {
                 this.closeModal();
             }
         });
-    }
+
         // Buscador
         document.getElementById('searchInput').addEventListener('input', (e) => {
             this.handleSearch(e.target.value);
         });
+    }
 
     // Manejar envío del formulario
     handleSubmit() {
         const formData = new FormData(document.getElementById('taskForm'));
+        const checklistRaw = formData.get('checklist') || '';
+        const checklistArr = checklistRaw.split('\n').map(item => item.trim()).filter(item => item.length > 0);
         const taskData = {
-            title: formData.get('title').trim(),
-            description: formData.get('description').trim(),
+            title: (formData.get('title') || '').trim(),
+            description: (formData.get('description') || '').trim(),
             priority: formData.get('priority'),
+            checklist: checklistArr,
             completed: false,
             createdAt: new Date().toISOString()
         };
@@ -157,10 +161,11 @@ class TaskManager {
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskDescription').value = task.description;
             document.getElementById('taskPriority').value = task.priority;
-            
+            if (document.getElementById('taskChecklist')) {
+                document.getElementById('taskChecklist').value = Array.isArray(task.checklist) ? task.checklist.join('\n') : '';
+            }
             document.getElementById('submitBtn').textContent = 'Actualizar Tarea';
             document.getElementById('cancelBtn').style.display = 'block';
-            
             // Scroll al formulario
             document.querySelector('.form-section').scrollIntoView({ 
                 behavior: 'smooth' 
@@ -195,6 +200,7 @@ class TaskManager {
         document.getElementById('submitBtn').textContent = 'Agregar Tarea';
         document.getElementById('cancelBtn').style.display = 'none';
         this.editingId = null;
+        if (document.getElementById('taskChecklist')) document.getElementById('taskChecklist').value = '';
     }
 
     // Renderizar tareas
@@ -221,7 +227,10 @@ class TaskManager {
             hour: '2-digit',
             minute: '2-digit'
         });
-
+        let checklistHtml = '';
+        if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+            checklistHtml = `<ul class="task-checklist">${task.checklist.map(item => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul>`;
+        }
         return `
             <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
                 <div class="task-header">
@@ -230,11 +239,9 @@ class TaskManager {
                         <span class="task-priority ${task.priority}">${task.priority}</span>
                     </div>
                 </div>
-                
                 ${task.description ? `<div class="task-description">${this.escapeHtml(task.description)}</div>` : ''}
-                
+                ${checklistHtml}
                 <div class="task-date">Creada: ${date}</div>
-                
                 <div class="task-actions">
                     <button class="complete-btn" onclick="taskManager.toggleComplete('${task.id}')">
                         ${task.completed ? 'Desmarcar' : 'Completar'}
@@ -509,4 +516,4 @@ function importTasks() {
     };
     
     input.click();
-} 
+}
