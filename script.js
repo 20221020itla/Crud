@@ -8,6 +8,7 @@ class TaskManager {
     }
 
     init() {
+        this.loadTheme();
         this.renderTasks();
         this.setupEventListeners();
         this.updateTaskCount();
@@ -29,6 +30,19 @@ class TaskManager {
         // Botón limpiar todo
         document.getElementById('clearAllBtn').addEventListener('click', () => {
             this.clearAllTasks();
+        });
+
+        // Header buttons
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            this.exportTasks();
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => {
+            this.importTasks();
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            this.toggleTheme();
         });
 
         // Modal de confirmación
@@ -229,18 +243,28 @@ class TaskManager {
         `;
     }
 
-    // Actualizar contador de tareas
+    // Actualizar contador de tareas y estadísticas del header
     updateTaskCount() {
         const count = this.tasks.length;
         const completedCount = this.tasks.filter(task => task.completed).length;
         const pendingCount = count - completedCount;
         
+        // Actualizar contador en la sección de tareas
         let countText = `${count} tarea${count !== 1 ? 's' : ''}`;
         if (count > 0) {
             countText += ` (${completedCount} completada${completedCount !== 1 ? 's' : ''}, ${pendingCount} pendiente${pendingCount !== 1 ? 's' : ''})`;
         }
-        
         document.getElementById('taskCount').textContent = countText;
+        
+        // Actualizar estadísticas del header
+        document.getElementById('totalTasks').textContent = count;
+        document.getElementById('completedTasks').textContent = completedCount;
+        document.getElementById('pendingTasks').textContent = pendingCount;
+        
+        // Actualizar barra de progreso
+        const progressPercentage = count > 0 ? Math.round((completedCount / count) * 100) : 0;
+        document.getElementById('progressFill').style.width = `${progressPercentage}%`;
+        document.getElementById('progressText').textContent = `${progressPercentage}% completado`;
     }
 
     // Guardar tareas en localStorage
@@ -314,6 +338,103 @@ class TaskManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Exportar tareas
+    exportTasks() {
+        if (this.tasks.length === 0) {
+            this.showNotification('No hay tareas para exportar', 'warning');
+            return;
+        }
+
+        const dataStr = JSON.stringify(this.tasks, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `tareas_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        this.showNotification('Tareas exportadas exitosamente', 'success');
+    }
+
+    // Importar tareas
+    importTasks() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const tasks = JSON.parse(e.target.result);
+                        if (Array.isArray(tasks)) {
+                            // Verificar que las tareas tengan la estructura correcta
+                            const validTasks = tasks.filter(task => 
+                                task.id && task.title && task.priority && 
+                                typeof task.completed === 'boolean' && task.createdAt
+                            );
+                            
+                            if (validTasks.length > 0) {
+                                this.tasks = validTasks;
+                                this.saveTasks();
+                                this.renderTasks();
+                                this.showNotification(`${validTasks.length} tareas importadas exitosamente`, 'success');
+                            } else {
+                                throw new Error('No se encontraron tareas válidas');
+                            }
+                        } else {
+                            throw new Error('Formato inválido');
+                        }
+                    } catch (error) {
+                        this.showNotification('Error al importar tareas. Verifica el formato del archivo.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        };
+        
+        input.click();
+    }
+
+    // Cambiar tema
+    toggleTheme() {
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const btnIcon = themeToggle.querySelector('.btn-icon');
+        
+        if (body.classList.contains('dark-theme')) {
+            body.classList.remove('dark-theme');
+            btnIcon.textContent = '🌙';
+            themeToggle.title = 'Cambiar a tema oscuro';
+            localStorage.setItem('theme', 'light');
+            this.showNotification('Tema claro activado', 'info');
+        } else {
+            body.classList.add('dark-theme');
+            btnIcon.textContent = '☀️';
+            themeToggle.title = 'Cambiar a tema claro';
+            localStorage.setItem('theme', 'dark');
+            this.showNotification('Tema oscuro activado', 'info');
+        }
+    }
+
+    // Cargar tema guardado
+    loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const themeToggle = document.getElementById('themeToggle');
+        const btnIcon = themeToggle.querySelector('.btn-icon');
+        
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            btnIcon.textContent = '☀️';
+            themeToggle.title = 'Cambiar a tema claro';
+        } else {
+            btnIcon.textContent = '🌙';
+            themeToggle.title = 'Cambiar a tema oscuro';
+        }
     }
 }
 

@@ -8,9 +8,68 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📝 Gestor de Tareas</h1>
-            <p>CRUD Sencillo con HTML, CSS y JavaScript</p>
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <span class="logo-icon">📝</span>
+                        <div class="logo-text">
+                            <h1>Gestor de Tareas</h1>
+                            <p>CRUD Sencillo con HTML, CSS y JavaScript</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="header-center">
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <span class="stat-icon">📋</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="totalTasks">0</span>
+                                <span class="stat-label">Total</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">✅</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="completedTasks">0</span>
+                                <span class="stat-label">Completadas</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">⏳</span>
+                            <div class="stat-info">
+                                <span class="stat-number" id="pendingTasks">0</span>
+                                <span class="stat-label">Pendientes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="header-btn" id="exportBtn" title="Exportar tareas">
+                            <span class="btn-icon">📤</span>
+                            <span class="btn-text">Exportar</span>
+                        </button>
+                        <button class="header-btn" id="importBtn" title="Importar tareas">
+                            <span class="btn-icon">📥</span>
+                            <span class="btn-text">Importar</span>
+                        </button>
+                        <button class="header-btn theme-toggle" id="themeToggle" title="Cambiar tema">
+                            <span class="btn-icon">🌙</span>
+                            <span class="btn-text">Tema</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0% completado</span>
+            </div>
         </header>
 
         <main>
