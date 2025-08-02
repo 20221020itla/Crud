@@ -73,11 +73,13 @@ class TaskManager {
         const formData = new FormData(document.getElementById('taskForm'));
         const checklistRaw = formData.get('checklist') || '';
         const checklistArr = checklistRaw.split('\n').map(item => item.trim()).filter(item => item.length > 0);
+        const deadline = formData.get('deadline') || '';
         const taskData = {
             title: (formData.get('title') || '').trim(),
             description: (formData.get('description') || '').trim(),
             priority: formData.get('priority'),
             checklist: checklistArr,
+            deadline: deadline,
             completed: false,
             createdAt: new Date().toISOString()
         };
@@ -164,6 +166,9 @@ class TaskManager {
             if (document.getElementById('taskChecklist')) {
                 document.getElementById('taskChecklist').value = Array.isArray(task.checklist) ? task.checklist.join('\n') : '';
             }
+            if (document.getElementById('taskDeadline')) {
+                document.getElementById('taskDeadline').value = task.deadline || '';
+            }
             document.getElementById('submitBtn').textContent = 'Actualizar Tarea';
             document.getElementById('cancelBtn').style.display = 'block';
             // Scroll al formulario
@@ -201,6 +206,7 @@ class TaskManager {
         document.getElementById('cancelBtn').style.display = 'none';
         this.editingId = null;
         if (document.getElementById('taskChecklist')) document.getElementById('taskChecklist').value = '';
+        if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = '';
     }
 
     // Renderizar tareas
@@ -231,6 +237,21 @@ class TaskManager {
         if (Array.isArray(task.checklist) && task.checklist.length > 0) {
             checklistHtml = `<ul class="task-checklist">${task.checklist.map(item => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul>`;
         }
+        let deadlineHtml = '';
+        let alertHtml = '';
+        if (task.deadline) {
+            const today = new Date();
+            const deadlineDate = new Date(task.deadline);
+            deadlineHtml = `<div class="task-deadline">Fecha límite: ${deadlineDate.toLocaleDateString('es-ES')}</div>`;
+            if (!task.completed) {
+                const diff = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+                if (diff < 0) {
+                    alertHtml = `<div class="deadline-alert" style="color:#dc3545;font-weight:bold;">¡Tarea vencida!</div>`;
+                } else if (diff <= 2) {
+                    alertHtml = `<div class="deadline-alert" style="color:#ffc107;font-weight:bold;">¡Fecha límite próxima!</div>`;
+                }
+            }
+        }
         return `
             <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
                 <div class="task-header">
@@ -241,6 +262,8 @@ class TaskManager {
                 </div>
                 ${task.description ? `<div class="task-description">${this.escapeHtml(task.description)}</div>` : ''}
                 ${checklistHtml}
+                ${deadlineHtml}
+                ${alertHtml}
                 <div class="task-date">Creada: ${date}</div>
                 <div class="task-actions">
                     <button class="complete-btn" onclick="taskManager.toggleComplete('${task.id}')">
