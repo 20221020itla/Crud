@@ -1,3 +1,5 @@
+Cambio 2
+
 # 📝 CRUD Sencillo - Gestor de Tareas
 
 Un gestor de tareas simple y elegante construido con HTML, CSS y JavaScript vanilla. Permite crear, leer, actualizar y eliminar tareas con una interfaz moderna y responsiva.
